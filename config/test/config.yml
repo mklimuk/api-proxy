@@ -1,0 +1,9 @@
+targets:
+  -
+    type: single
+    id: generator
+    url: http://generator:8080
+    protocol: HTTP
+    methods:
+      - GET
+    privileges: 0
