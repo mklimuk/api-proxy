@@ -85,10 +85,6 @@ func (t *targetsManager) CreatePool(conf *TargetConfig) error {
 	if _, ok := t.targets[conf.TID]; ok {
 		return goerr.NewError("Pool already exists", Conflict)
 	}
-	var err error
-	if conf.uri, err = url.Parse(conf.URL); err != nil {
-		return err
-	}
 	conf.keeper = t.keeper
 	p := NewPool(conf)
 	t.targets[conf.TID] = p
@@ -111,13 +107,9 @@ func (t *targetsManager) Proxy(ctx *gin.Context) {
 }
 
 func targetFromConfig(conf *TargetConfig) (Target, error) {
-	var err error
-	if conf.uri, err = url.Parse(conf.URL); err != nil {
-		return nil, err
-	}
 	switch conf.TargetType {
 	case TypeSingle:
-		return NewSingle(conf), nil
+		return NewSingle(conf)
 	case TypePool:
 		return NewPool(conf), nil
 	}

@@ -32,3 +32,14 @@ func (m *TargetsManagerMock) CreatePool(conf *TargetConfig) error {
 func (m *TargetsManagerMock) Proxy(ctx *gin.Context) {
 	m.Called(ctx)
 }
+
+//GatekeeperMock is a mock of the Gatekeeper interface
+type GatekeeperMock struct {
+	mock.Mock
+}
+
+//CheckAccess is a mocked method
+func (m *GatekeeperMock) CheckAccess(token string, accessPrivileges int, updateToken bool) (string, error) {
+	args := m.Called(token, accessPrivileges, updateToken)
+	return args.String(0), args.Error(1)
+}
