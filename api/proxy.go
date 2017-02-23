@@ -15,12 +15,10 @@ type proxyAPI struct {
 	manager proxy.TargetsManager
 }
 
-type poolInfo struct {
-	PoolID          string             `json:"id"`
-	PrivilegesLevel int                `json:"privilegesLevel,opitempty"`
-	Protocol        proxy.ProtocolType `json:"protocol"`
-	TargetID        string             `json:"targetId,opitempty"`
-	TargetURI       string             `json:"targetUri,omitempty"`
+type addToPool struct {
+	PoolID    string `json:"id"`
+	TargetID  string `json:"targetId,opitempty"`
+	TargetURI string `json:"targetUri,omitempty"`
 }
 
 //NewProxyAPI is the proxy proxy API constructor
@@ -42,21 +40,14 @@ func (p *proxyAPI) AddRoutes(router *gin.Engine) {
 func (p *proxyAPI) createPool(ctx *gin.Context) {
 	defer rest.ErrorHandler(ctx)
 	var err error
-	l := new(poolInfo)
+	l := new(proxy.TargetConfig)
 	if err = ctx.BindJSON(l); err != nil {
 		log.WithFields(log.Fields{"logger": "proxy.api", "method": "createPool", "error": err}).
 			Warn("Could not parse request")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse input", "details": err.Error()})
 		return
 	}
-
-	pool := &proxy.TargetConfig{
-		TID:               l.PoolID,
-		TargetProtocol:    l.Protocol,
-		DefaultPrivileges: l.PrivilegesLevel,
-	}
-
-	if err = p.manager.CreatePool(pool); err != nil {
+	if err = p.manager.CreatePool(l); err != nil {
 		switch goerr.GetType(err) {
 		case proxy.Conflict:
 			ctx.JSON(http.StatusConflict, gin.H{"error": "Pool with this id already exists"})
@@ -74,7 +65,7 @@ func (p *proxyAPI) createPool(ctx *gin.Context) {
 func (p *proxyAPI) addToPool(ctx *gin.Context) {
 	defer rest.ErrorHandler(ctx)
 	var err error
-	u := new(poolInfo)
+	u := new(addToPool)
 	if err = ctx.BindJSON(u); err != nil {
 		log.WithFields(log.Fields{"logger": "proxy.api", "method": "createUser", "error": err}).
 			Warn("Could not parse request")

@@ -63,7 +63,7 @@ func (suite *APITestSuite) TestCreatePool() {
 	res, err := http.Post(fmt.Sprintf("%s%s", suite.serv.URL, "/pool"), "application/x.pool.req+json", nil)
 	a.NoError(err)
 	a.Equal(http.StatusBadRequest, res.StatusCode)
-	req := &poolInfo{PoolID: "test", PrivilegesLevel: 3, Protocol: proxy.ProtocolHTTP}
+	req := &proxy.TargetConfig{TID: "test", TargetProtocol: proxy.ProtocolHTTP}
 	var b []byte
 	b, err = json.Marshal(&req)
 	a.NoError(err)

@@ -50,12 +50,12 @@ type Pool interface {
 
 // TargetConfig wraps proxy target configuration
 type TargetConfig struct {
-	TID            string       `yaml:"id"`
-	TargetType     TargetType   `yaml:"type"`
-	URL            string       `yaml:"url"`
-	UpdatesToken   bool         `yaml:"updatesToken"`
-	TargetProtocol ProtocolType `yaml:"protocol"`
-	Privileges     *Privileges  `yaml:"privileges"`
+	TID            string       `yaml:"id" json:"id"`
+	TargetType     TargetType   `yaml:"type" json:"type"`
+	URL            string       `yaml:"url" json:"url"`
+	UpdatesToken   bool         `yaml:"updatesToken" json:"updatesToken"`
+	TargetProtocol ProtocolType `yaml:"protocol" json:"targetProtocol"`
+	Privileges     *Privileges  `yaml:"privileges" json:"privileges"`
 	keeper         Gatekeeper
 	uri            *url.URL
 }
