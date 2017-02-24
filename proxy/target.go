@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 //TargetType enumerates supported target types
@@ -28,6 +29,12 @@ const (
 	ProtocolHTTP      ProtocolType = "HTTP"
 	ProtocolWebsocket ProtocolType = "WS"
 )
+
+var upgrader = &websocket.Upgrader{
+	ReadBufferSize:  2048,
+	WriteBufferSize: 2048,
+	CheckOrigin:     func(r *http.Request) bool { return true },
+}
 
 //Target defines an endpoint connection handler behavior
 type Target interface {

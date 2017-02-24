@@ -21,7 +21,9 @@ func NewSingle(t *TargetConfig) (Target, error) {
 	if t.TargetProtocol == ProtocolHTTP {
 		s.rp = httputil.NewSingleHostReverseProxy(s.URI())
 	} else {
-		s.rp = websocketproxy.NewProxy(s.URI())
+		proxy := websocketproxy.NewProxy(s.URI())
+		proxy.Upgrader = upgrader
+		s.rp = proxy
 	}
 	return Target(s), nil
 }

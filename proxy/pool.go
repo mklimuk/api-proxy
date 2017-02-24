@@ -45,7 +45,9 @@ func (t *pool) Add(ID string, uri *url.URL) {
 	if t.Protocol() == ProtocolHTTP {
 		t.rp[ID] = httputil.NewSingleHostReverseProxy(uri)
 	} else {
-		t.rp[ID] = websocketproxy.NewProxy(uri)
+		proxy := websocketproxy.NewProxy(uri)
+		proxy.Upgrader = upgrader
+		t.rp[ID] = proxy
 	}
 }
 
