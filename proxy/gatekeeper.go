@@ -15,7 +15,7 @@ import (
 type checkToken struct {
 	Token  string `json:"token"`
 	Update bool   `json:"update"`
-	Claims claims `json:"claims"`
+	Claims claims `json:"claims,omitempty"`
 }
 
 type claims struct {
@@ -41,6 +41,12 @@ type keeper struct {
 }
 
 func (k *keeper) CheckAccess(token string, accessPrivileges int, updateToken bool) (string, error) {
+	if token == "" {
+		if accessPrivileges > 0 {
+			return token, goerr.NewError("Authorization token required but not present", goerr.Unauthorized)
+		}
+		return token, nil
+	}
 	//call authentication service to check the token and compare privileges afterwards
 	req := &checkToken{
 		Token:  token,
@@ -53,7 +59,7 @@ func (k *keeper) CheckAccess(token string, accessPrivileges int, updateToken boo
 	}
 
 	var res *http.Response
-	if res, err = k.client.Post(fmt.Sprintf("%s%s", k.auth.RequestURI(), "/token/check"), "application/x.token.check+json", bytes.NewReader(b)); err != nil {
+	if res, err = k.client.Post(fmt.Sprintf("%s%s", k.auth.String(), "/token/check"), "application/x.token.check+json", bytes.NewReader(b)); err != nil {
 		return token, err
 	}
 

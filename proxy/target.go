@@ -149,26 +149,19 @@ func (t *TargetConfig) matchRegex(path *Path, toCheck string) (bool, error) {
 
 func checkAuthAndServe(t Target, path string, rp http.Handler, ctx *gin.Context) {
 	condition := t.PrivilegesForPath(path, ctx.Request.Method)
-	// if the API is protected we should perform necessary checks
-	if condition > 0 {
-		h := ctx.Request.Header.Get("Authorization")
-		if h == "" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Requested API is not public but no Authorization header is present"})
-			return
-		}
 
-		var token string
-		var err error
-		if token, err = t.Keeper().CheckAccess(extractToken(h), condition, t.UpdateToken()); err != nil {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid access token", "details": err.Error()})
-			return
-		}
-		ctx.Header("token", token)
+	// if the API is protected we should perform necessary checks
+	h := ctx.Request.Header.Get("Authorization")
+	var token string
+	var err error
+	if token, err = t.Keeper().CheckAccess(extractToken(h), condition, t.UpdateToken()); err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid access token", "details": err.Error()})
+		return
 	}
+	ctx.Header("token", token)
 
 	// rewrite request URL/URL
 	ctx.Request.RequestURI = path
-	var err error
 	if ctx.Request.URL, err = url.Parse(ctx.Request.RequestURI); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse target path", "description": err.Error()})
 		return

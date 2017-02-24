@@ -47,6 +47,7 @@ func (suite *SingleTestSuite) TearDownSuite() {
 
 func (suite *SingleTestSuite) TestDefaultPath() {
 	a := assert.New(suite.T())
+	suite.keeper.On("CheckAccess", "", 0, false).Return("", nil).Once()
 	res, err := http.Get(fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog"))
 	a.NoError(err)
 	a.Equal(http.StatusOK, res.StatusCode)
@@ -54,6 +55,7 @@ func (suite *SingleTestSuite) TestDefaultPath() {
 
 func (suite *SingleTestSuite) TestNoHeader() {
 	a := assert.New(suite.T())
+	suite.keeper.On("CheckAccess", "", 5, false).Return("", goerr.NewError("unauthorized", goerr.Unauthorized)).Once()
 	res, err := http.Get(fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog/templates"))
 	a.NoError(err)
 	a.Equal(http.StatusUnauthorized, res.StatusCode)
