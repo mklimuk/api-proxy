@@ -42,7 +42,7 @@ func main() {
 
 	var authURL *url.URL
 
-	if authURL, err = url.Parse("http://auth"); err != nil {
+	if authURL, err = url.Parse("http://auth:8080"); err != nil {
 		panic(err)
 	}
 	keeper := proxy.NewGatekeeper(authURL)
