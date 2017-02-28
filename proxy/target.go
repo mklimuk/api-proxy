@@ -151,21 +151,21 @@ func checkAuthAndServe(t Target, path string, rp http.Handler, ctx *gin.Context)
 	condition := t.PrivilegesForPath(path, ctx.Request.Method)
 
 	// if the API is protected we should perform necessary checks
-	h := ctx.Request.Header.Get("Authorization")
+	h := ctx.Request.Header.Get("authorization")
 	var token string
 	var err error
 	if token, err = t.Keeper().CheckAccess(extractToken(h), condition, t.UpdateToken()); err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid access token", "details": err.Error()})
 		return
 	}
-	ctx.Header("token", token)
-
+	if t.UpdateToken() {
+		ctx.Writer.Header().Add("Token", token)
+	}
 	// rewrite request URL/URL
 	ctx.Request.RequestURI = path
 	if ctx.Request.URL, err = url.Parse(ctx.Request.RequestURI); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse target path", "description": err.Error()})
 		return
 	}
-
 	rp.ServeHTTP(ctx.Writer, ctx.Request)
 }

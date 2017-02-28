@@ -33,7 +33,7 @@ func (suite *SingleTestSuite) SetupSuite() {
 		&Path{Regex: `\/catalog\/templates\/[^\/\s]*$`, Privileges: 10, Method: http.MethodPost},
 		&Path{Exact: `/catalog/templates`, Privileges: 5, Method: http.MethodGet},
 	}
-	c := &TargetConfig{Privileges: &Privileges{Default: 0, Paths: p}, TID: "test", URL: fmt.Sprintf("%s/pong", suite.serv.URL), TargetProtocol: ProtocolHTTP, TargetType: TypeSingle}
+	c := &TargetConfig{Privileges: &Privileges{Default: 0, Paths: p}, TID: "test", URL: fmt.Sprintf("%s/pong", suite.serv.URL), TargetProtocol: ProtocolHTTP, TargetType: TypeSingle, UpdatesToken: true}
 	suite.keeper = GatekeeperMock{}
 	c.keeper = &suite.keeper
 	suite.s, _ = NewSingle(c)
@@ -47,7 +47,7 @@ func (suite *SingleTestSuite) TearDownSuite() {
 
 func (suite *SingleTestSuite) TestDefaultPath() {
 	a := assert.New(suite.T())
-	suite.keeper.On("CheckAccess", "", 0, false).Return("", nil).Once()
+	suite.keeper.On("CheckAccess", "", 0, true).Return("", nil).Once()
 	res, err := http.Get(fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog"))
 	a.NoError(err)
 	a.Equal(http.StatusOK, res.StatusCode)
@@ -55,7 +55,7 @@ func (suite *SingleTestSuite) TestDefaultPath() {
 
 func (suite *SingleTestSuite) TestNoHeader() {
 	a := assert.New(suite.T())
-	suite.keeper.On("CheckAccess", "", 5, false).Return("", goerr.NewError("unauthorized", goerr.Unauthorized)).Once()
+	suite.keeper.On("CheckAccess", "", 5, true).Return("", goerr.NewError("unauthorized", goerr.Unauthorized)).Once()
 	res, err := http.Get(fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog/templates"))
 	a.NoError(err)
 	a.Equal(http.StatusUnauthorized, res.StatusCode)
@@ -66,7 +66,7 @@ func (suite *SingleTestSuite) TestNoPrivileges() {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog/templates"), nil)
 	req.Header.Set("Authorization", "testToken")
-	suite.keeper.On("CheckAccess", "testToken", 5, false).Return("testTokenRes", goerr.NewError("unauthorized", goerr.Unauthorized)).Once()
+	suite.keeper.On("CheckAccess", "testToken", 5, true).Return("testTokenRes", goerr.NewError("unauthorized", goerr.Unauthorized)).Once()
 	res, err := client.Do(req)
 	a.NoError(err)
 	a.Equal(http.StatusUnauthorized, res.StatusCode)
@@ -77,14 +77,15 @@ func (suite *SingleTestSuite) TestProxy() {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog/templates"), nil)
 	req.Header.Set("Authorization", "testToken")
-	suite.keeper.On("CheckAccess", "testToken", 5, false).Return("testTokenRes", nil).Once()
+	suite.keeper.On("CheckAccess", "testToken", 5, true).Return("testTokenRes", nil).Once()
 	res, err := client.Do(req)
 	a.NoError(err)
 	a.Equal(http.StatusOK, res.StatusCode)
 	req, _ = http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s", suite.serv.URL, "/api/test/catalog/templates/template1"), nil)
 	req.Header.Set("Authorization", "testToken")
-	suite.keeper.On("CheckAccess", "testToken", 10, false).Return("testTokenRes", nil).Once()
+	suite.keeper.On("CheckAccess", "testToken", 10, true).Return("testTokenRes", nil).Once()
 	res, err = client.Do(req)
+	a.Equal("testTokenRes", res.Header.Get("Token"))
 	a.NoError(err)
 	a.Equal(http.StatusOK, res.StatusCode)
 }
